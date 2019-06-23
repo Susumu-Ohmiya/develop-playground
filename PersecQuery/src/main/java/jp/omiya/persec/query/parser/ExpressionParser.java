@@ -11,7 +11,6 @@ import org.jparsec.Parsers;
 
 import jp.omiya.persec.query.ast.BetweenExpression;
 import jp.omiya.persec.query.ast.BinaryExpression;
-import jp.omiya.persec.query.ast.BinaryRelationalExpression;
 import jp.omiya.persec.query.ast.Expression;
 import jp.omiya.persec.query.ast.FunctionExpression;
 import jp.omiya.persec.query.ast.LikeExpression;
@@ -19,7 +18,6 @@ import jp.omiya.persec.query.ast.NullExpression;
 import jp.omiya.persec.query.ast.NumberExpression;
 import jp.omiya.persec.query.ast.Op;
 import jp.omiya.persec.query.ast.QualifiedNameExpression;
-import jp.omiya.persec.query.ast.Relation;
 import jp.omiya.persec.query.ast.StringExpression;
 import jp.omiya.persec.query.ast.TupleExpression;
 import jp.omiya.persec.query.ast.UnaryExpression;
@@ -115,18 +113,6 @@ public final class ExpressionParser {
 				BetweenExpression::new);
 	}
 
-	static Parser<Expression> inRelation(Parser<Expression> expr, Parser<Relation> relation) {
-		return Parsers.sequence(
-				expr, Parsers.between(phrase("in ("), relation, term(")")),
-				(e, r) -> new BinaryRelationalExpression(e, Op.IN, r));
-	}
-
-	static Parser<Expression> notInRelation(Parser<Expression> expr, Parser<Relation> relation) {
-		return Parsers.sequence(
-				expr, Parsers.between(phrase("not in ("), relation, term(")")),
-				(e, r) -> new BinaryRelationalExpression(e, Op.NOT_IN, r));
-	}
-
 	static Parser<Expression> in(Parser<Expression> expr) {
 		return Parsers.sequence(
 				expr, term("in").next(tuple(expr)),
@@ -139,9 +125,8 @@ public final class ExpressionParser {
 				(e, t) -> new BinaryExpression(e, Op.NOT_IN, t));
 	}
 
-	static Parser<Expression> condition(Parser<Expression> expr, Parser<Relation> rel) {
-		Parser<Expression> atom = Parsers.or(
-				compare(expr), in(expr), notIn(expr), inRelation(expr, rel), notInRelation(expr, rel));
+	static Parser<Expression> condition(Parser<Expression> expr) {
+		Parser<Expression> atom = Parsers.or(compare(expr), in(expr), notIn(expr));
 		return logical(atom);
 	}
 
