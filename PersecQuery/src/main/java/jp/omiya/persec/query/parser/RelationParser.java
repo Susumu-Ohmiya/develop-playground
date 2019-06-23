@@ -21,14 +21,11 @@ public final class RelationParser {
 	private static final Parser<Relation> TABLE = TerminalParser.QUALIFIED_NAME.map(TableRelation::new);
 
 	public static Parser<Relation> ready() {
-		Parser.Reference<Relation> relationRef = Parser.newReference();
-		Parser<Relation> subQuery = ExpressionParser.paren(relationRef.lazy());
 		Parser.Reference<Expression> conditionRef = Parser.newReference();
 		Parser<Expression> orderby = ExpressionParser.expression(conditionRef.lazy());
-		Parser<Expression> cond = ExpressionParser.condition(orderby, subQuery);
+		Parser<Expression> cond = ExpressionParser.condition(orderby);
 		Parser<Relation> relation = select(TABLE, cond, orderby);
 		conditionRef.set(cond);
-		relationRef.set(relation);
 		return relation.from(TerminalParser.TOKENIZER, Scanners.SQL_DELIMITER);
 	}
 
